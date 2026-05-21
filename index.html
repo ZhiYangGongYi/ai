@@ -1986,6 +1986,8 @@
         if (thinkingEnabled) {
             requestBody.thinking = { type: "enabled" };
             requestBody.reasoning_effort = "high";
+        } else {
+            requestBody.thinking = { type: "disabled" };
         }
         fetch(apiUrl, {
             method: 'POST',
