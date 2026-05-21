@@ -563,6 +563,9 @@
         }
 
         .icon-btn:hover { background: rgba(0,0,0,0.05); color: var(--accent); }
+        .icon-btn.think-btn.active { background: var(--accent-light); color: var(--accent); border: 1.5px solid var(--accent-border); }
+        body.theme-dark .icon-btn.think-btn.active { background: var(--accent-light); color: var(--accent); }
+        body.theme-midnight .icon-btn.think-btn.active { background: var(--accent-light); color: var(--accent); }
 
         .icon-btn.upload-btn input[type="file"] {
             position: absolute; inset: 0; opacity: 0; cursor: pointer;
@@ -1067,6 +1070,9 @@
             <div class="chat-input-area" id="chat-input-area">
                 <textarea class="user-input" id="user-input" placeholder="Type your message..." rows="1" autocomplete="off"></textarea>
                 <div class="input-actions">
+                    <button class="icon-btn think-btn" id="think-btn" onclick="toggleThinking()" title="Thinking">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+                    </button>
                     <label class="icon-btn upload-btn" title="Attach file">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
                         <input type="file" id="file-input" multiple accept="image/*,.pdf,.txt,.md,.py,.js,.html,.css,.json,.csv" onchange="handleFileSelect(event)">
@@ -1126,6 +1132,23 @@
         apiKey: '',
         model: 'gpt-4o-mini'
     };
+
+    var thinkingEnabled = false;
+    var autoScrollEnabled = true;
+
+    function toggleThinking() {
+        thinkingEnabled = !thinkingEnabled;
+        var btn = document.getElementById('think-btn');
+        if (btn) {
+            if (thinkingEnabled) {
+                btn.classList.add('active');
+                showToast('Thinking enabled');
+            } else {
+                btn.classList.remove('active');
+                showToast('Thinking disabled');
+            }
+        }
+    }
 
     function loadSettings() {
         var saved = localStorage.getItem('ai_app_settings');
@@ -1487,6 +1510,13 @@
             textarea.style.height = 'auto';
             textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
         });
+
+        var chatBox = document.getElementById('chat-box');
+        chatBox.addEventListener('scroll', function() {
+            var threshold = 30;
+            var atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight <= threshold;
+            autoScrollEnabled = atBottom;
+        });
     }
 
     function startNewChat() {
@@ -1781,27 +1811,46 @@
         if (currentChatId !== targetChatId || !liveElementsReferences || !liveResponses[targetChatId]) return;
 
         var record = liveResponses[targetChatId];
-        var thinkMatch = record.fullResponse.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+        var hasReasoning = record.reasoningBuffer && record.reasoningBuffer.trim().length > 0;
 
-        if (thinkMatch && record.isThinking) {
+        if (hasReasoning) {
             if (!liveElementsReferences.thinkBoxNode) {
                 var box = createThinkBox();
                 liveElementsReferences.thinkBoxNode = box;
                 liveElementsReferences.thinkContainer.appendChild(box.element);
             }
-            liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
+            liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(record.reasoningBuffer);
+            var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+            if (dots) dots.style.display = 'none';
         } else {
-            if (thinkMatch && liveElementsReferences.thinkBoxNode) {
+            var thinkMatch = record.fullResponse.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+            if (thinkMatch && !liveElementsReferences.thinkBoxNode) {
+                var box = createThinkBox();
+                liveElementsReferences.thinkBoxNode = box;
+                liveElementsReferences.thinkContainer.appendChild(box.element);
                 liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
-                liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
-                var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
-                if (dots) dots.style.display = 'none';
+                if (record.fullResponse.indexOf('</think>') !== -1) {
+                    liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
+                    var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+                    if (dots) dots.style.display = 'none';
+                }
+            } else if (thinkMatch && liveElementsReferences.thinkBoxNode) {
+                liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
+                if (record.fullResponse.indexOf('</think>') !== -1) {
+                    liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
+                    var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+                    if (dots) dots.style.display = 'none';
+                }
             }
-            var normalContent = record.fullResponse.replace(/<<think>[\s\S]*?<\/think>/gi, '');
-            liveElementsReferences.contentDiv.innerHTML = parseMd(normalContent);
-            enhanceCodeBlocks(liveElementsReferences.contentDiv);
         }
-        scrollToBottom();
+
+        var normalContent = record.fullResponse;
+        if (!hasReasoning) {
+            normalContent = record.fullResponse.replace(/<<think>[\s\S]*?<\/think>/gi, '');
+        }
+        liveElementsReferences.contentDiv.innerHTML = parseMd(normalContent);
+        enhanceCodeBlocks(liveElementsReferences.contentDiv);
+        if (autoScrollEnabled) scrollToBottom();
     }
 
     function updateSendButton() {
@@ -1915,7 +1964,7 @@
 
         if (currentChatId === targetChatId) liveElementsReferences = createLiveAIMessageElement();
 
-        liveResponses[targetChatId] = { fullResponse: '', isThinking: true };
+        liveResponses[targetChatId] = { fullResponse: '', reasoningBuffer: '', isThinking: true };
         var controller = new AbortController();
         activeControllers[targetChatId] = controller;
 
@@ -1924,16 +1973,19 @@
         var headers = { 'Content-Type': 'application/json' };
         if (appSettings.apiKey) headers['Authorization'] = 'Bearer ' + appSettings.apiKey;
 
+        var requestBody = {
+            model: appSettings.model,
+            messages: apiHistory,
+            stream: true
+        };
+        if (thinkingEnabled) {
+            requestBody.thinking = { type: "enabled" };
+            requestBody.reasoning_effort = "high";
+        }
         fetch(apiUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({
-                model: appSettings.model,
-                messages: apiHistory,
-                max_tokens: 2048,
-                temperature: 0.7,
-                stream: true
-            }),
+            body: JSON.stringify(requestBody),
             signal: controller.signal
         }).then(function(response) {
             if (!response.ok) throw new Error('HTTP error: ' + response.status);
@@ -1951,11 +2003,16 @@
                             try {
                                 var data = JSON.parse(line.slice(6));
                                 var delta = data.choices && data.choices[0] && data.choices[0].delta;
-                                var token = (delta && delta.content) || '';
-                                if (token) {
-                                    liveResponses[targetChatId].fullResponse += token;
-                                    if (liveResponses[targetChatId].isThinking && liveResponses[targetChatId].fullResponse.indexOf('</think>') !== -1) liveResponses[targetChatId].isThinking = false;
-                                    updateLiveUI(targetChatId);
+                                if (delta) {
+                                    if (delta.reasoning_content) {
+                                        if (!liveResponses[targetChatId].reasoningBuffer) liveResponses[targetChatId].reasoningBuffer = '';
+                                        liveResponses[targetChatId].reasoningBuffer += delta.reasoning_content;
+                                        updateLiveUI(targetChatId);
+                                    }
+                                    if (delta.content) {
+                                        liveResponses[targetChatId].fullResponse += delta.content;
+                                        updateLiveUI(targetChatId);
+                                    }
                                 }
                             } catch (e) {}
                         }
