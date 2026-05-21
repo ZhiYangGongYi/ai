@@ -1879,10 +1879,15 @@
         var chatId = currentChatId;
         if (activeControllers[chatId]) {
             activeControllers[chatId].abort();
-            if (liveResponses[chatId] && liveResponses[chatId].fullResponse) {
+            if (liveResponses[chatId] && (liveResponses[chatId].fullResponse || liveResponses[chatId].reasoningBuffer)) {
+                var finalContent = liveResponses[chatId].fullResponse || '';
+                var reasoning = liveResponses[chatId].reasoningBuffer;
+                if (reasoning && reasoning.trim().length > 0) {
+                    finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
+                }
                 allChats[chatId].history.push({
                     role: 'assistant',
-                    content: liveResponses[chatId].fullResponse,
+                    content: finalContent,
                     timestamp: formatTime()
                 });
                 saveToStorage();
@@ -2022,10 +2027,15 @@
             }
             return pump();
         }).then(function() {
-            if (liveResponses[targetChatId] && liveResponses[targetChatId].fullResponse) {
+            if (liveResponses[targetChatId] && (liveResponses[targetChatId].fullResponse || liveResponses[targetChatId].reasoningBuffer)) {
+                var finalContent = liveResponses[targetChatId].fullResponse || '';
+                var reasoning = liveResponses[targetChatId].reasoningBuffer;
+                if (reasoning && reasoning.trim().length > 0) {
+                    finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
+                }
                 allChats[targetChatId].history.push({
                     role: 'assistant',
-                    content: liveResponses[targetChatId].fullResponse,
+                    content: finalContent,
                     timestamp: formatTime()
                 });
                 saveToStorage();
