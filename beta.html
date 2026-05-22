@@ -1858,101 +1858,106 @@
     }
 
     function renderUserMessage(displayText, timestamp, files) {
-        var chatBox = document.getElementById('chat-box');
-        var es = document.getElementById('empty-state');
-        if (es) es.remove();
+    if (!displayText && (!files || files.length === 0)) return;
+    var chatBox = document.getElementById('chat-box');
+    var es = document.getElementById('empty-state');
+    if (es) es.remove();
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper user';
-        var group = document.createElement('div');
-        group.className = 'msg-group';
-        var msgDiv = document.createElement('div');
-        msgDiv.className = 'message user-message';
-        msgDiv.innerHTML = '<p>' + escHtml(displayText) + '</p>';
+    var wrapper = document.createElement('div');
+    wrapper.className = 'message-wrapper user';
+    var group = document.createElement('div');
+    group.className = 'msg-group';
+    var msgDiv = document.createElement('div');
+    msgDiv.className = 'message user-message';
+    msgDiv.innerHTML = '<p>' + escHtml(displayText) + '</p>';
 
-        if (files && files.length > 0) {
-            var attachDiv = document.createElement('div');
-            attachDiv.className = 'file-attachments';
-            files.forEach(function(file) {
-                var chip = document.createElement('div');
-                chip.className = 'file-attachment-chip';
-                if (file.isImage && file.data) chip.innerHTML = '<img src="' + file.data + '" alt="">' + '<span>' + escHtml(file.name) + '</span>';
-                else chip.innerHTML = '<span>[File]</span><span>' + escHtml(file.name) + '</span>';
-                attachDiv.appendChild(chip);
-            });
-            msgDiv.appendChild(attachDiv);
-        }
-
-        var timeEl = document.createElement('div');
-        timeEl.className = 'msg-timestamp';
-        timeEl.innerText = timestamp || formatTime();
-
-        group.appendChild(msgDiv);
-        group.appendChild(timeEl);
-        wrapper.appendChild(group);
-        chatBox.appendChild(wrapper);
+    if (files && files.length > 0) {
+        var attachDiv = document.createElement('div');
+        attachDiv.className = 'file-attachments';
+        files.forEach(function(file) {
+            var chip = document.createElement('div');
+            chip.className = 'file-attachment-chip';
+            if (file.isImage && file.data) chip.innerHTML = '<img src="' + file.data + '" alt="">' + '<span>' + escHtml(file.name) + '</span>';
+            else chip.innerHTML = '<span>[File]</span><span>' + escHtml(file.name) + '</span>';
+            attachDiv.appendChild(chip);
+        });
+        msgDiv.appendChild(attachDiv);
     }
+
+    var timeEl = document.createElement('div');
+    timeEl.className = 'msg-timestamp';
+    timeEl.innerText = timestamp || formatTime();
+
+    group.appendChild(msgDiv);
+    group.appendChild(timeEl);
+    wrapper.appendChild(group);
+    chatBox.appendChild(wrapper);
+}
 
     function renderAIMessage(content, timestamp, sandboxRounds) {
-        var chatBox = document.getElementById('chat-box');
-        var es = document.getElementById('empty-state');
-        if (es) es.remove();
+    var chatBox = document.getElementById('chat-box');
+    var es = document.getElementById('empty-state');
+    if (es) es.remove();
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper ai';
-        var group = document.createElement('div');
-        group.className = 'msg-group';
-        var msgDiv = document.createElement('div');
-        msgDiv.className = 'message ai-message';
+    var wrapper = document.createElement('div');
+    wrapper.className = 'message-wrapper ai';
+    var group = document.createElement('div');
+    group.className = 'msg-group';
+    var msgDiv = document.createElement('div');
+    msgDiv.className = 'message ai-message';
 
-        var aiContentDiv = document.createElement('div');
-        aiContentDiv.className = 'ai-content';
+    var aiContentDiv = document.createElement('div');
+    aiContentDiv.className = 'ai-content';
 
-        var thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
-        if (thinkMatch) {
-            var thinkDiv = document.createElement('div');
-            thinkDiv.className = 'think-box';
-            thinkDiv.innerHTML = '<div class="think-header"><span>Thinking</span><span class="think-toggle">&rsaquo;</span></div><div class="think-content">' + parseMd(thinkMatch[1]) + '</div>';
-            thinkDiv.addEventListener('click', function(e) {
-                if (e.target && e.target.closest && e.target.closest('.think-header')) thinkDiv.classList.toggle('expanded');
-            });
-            msgDiv.appendChild(thinkDiv);
-        }
-
-        var normalContent = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        aiContentDiv.innerHTML = parseMd(normalContent);
-        enhanceCodeBlocks(aiContentDiv);
-        msgDiv.appendChild(aiContentDiv);
-
-        if (sandboxRounds && sandboxRounds.length > 0) {
-            var panel = createSandboxPanel(sandboxRounds);
-            msgDiv.appendChild(panel);
-        }
-
-        group.appendChild(msgDiv);
-
-        var actionsDiv = document.createElement('div');
-        actionsDiv.className = 'msg-actions';
-        var copyBtn = document.createElement('button');
-        copyBtn.className = 'msg-action-btn copy-btn';
-        copyBtn.innerText = 'Copy';
-        copyBtn.onclick = function(){ copyMessage(copyBtn); };
-        var regenBtn = document.createElement('button');
-        regenBtn.className = 'msg-action-btn regen-btn';
-        regenBtn.innerText = 'Regenerate';
-        regenBtn.onclick = function(){ regenerateResponse(); };
-        actionsDiv.appendChild(copyBtn);
-        actionsDiv.appendChild(regenBtn);
-        group.appendChild(actionsDiv);
-
-        var timeEl = document.createElement('div');
-        timeEl.className = 'msg-timestamp';
-        timeEl.innerText = timestamp || formatTime();
-        group.appendChild(timeEl);
-
-        wrapper.appendChild(group);
-        chatBox.appendChild(wrapper);
+    var thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
+    if (thinkMatch) {
+        var thinkDiv = document.createElement('div');
+        thinkDiv.className = 'think-box';
+        thinkDiv.innerHTML = '<div class="think-header"><span>Thinking</span><span class="think-toggle">&rsaquo;</span></div><div class="think-content">' + parseMd(thinkMatch[1]) + '</div>';
+        thinkDiv.addEventListener('click', function(e) {
+            if (e.target && e.target.closest && e.target.closest('.think-header')) thinkDiv.classList.toggle('expanded');
+        });
+        msgDiv.appendChild(thinkDiv);
     }
+
+    var normalContent = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    if (sandboxRounds && sandboxRounds.length > 0) {
+        normalContent = normalContent.replace(/```(?:js|javascript)\s*\n[\s\S]*?\n```/g, '');
+        normalContent = normalContent.trim();
+    }
+    aiContentDiv.innerHTML = parseMd(normalContent);
+    enhanceCodeBlocks(aiContentDiv);
+    msgDiv.appendChild(aiContentDiv);
+
+    if (sandboxRounds && sandboxRounds.length > 0) {
+        var panel = createSandboxPanel(sandboxRounds);
+        msgDiv.appendChild(panel);
+    }
+
+    group.appendChild(msgDiv);
+
+    var actionsDiv = document.createElement('div');
+    actionsDiv.className = 'msg-actions';
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'msg-action-btn copy-btn';
+    copyBtn.innerText = 'Copy';
+    copyBtn.onclick = function(){ copyMessage(copyBtn); };
+    var regenBtn = document.createElement('button');
+    regenBtn.className = 'msg-action-btn regen-btn';
+    regenBtn.innerText = 'Regenerate';
+    regenBtn.onclick = function(){ regenerateResponse(); };
+    actionsDiv.appendChild(copyBtn);
+    actionsDiv.appendChild(regenBtn);
+    group.appendChild(actionsDiv);
+
+    var timeEl = document.createElement('div');
+    timeEl.className = 'msg-timestamp';
+    timeEl.innerText = timestamp || formatTime();
+    group.appendChild(timeEl);
+
+    wrapper.appendChild(group);
+    chatBox.appendChild(wrapper);
+}
 
     function createSandboxPanel(rounds) {
         var panel = document.createElement('div');
@@ -2180,50 +2185,54 @@
     }
 
     function updateLiveUI(targetChatId) {
-        if (currentChatId !== targetChatId || !liveElementsReferences || !liveResponses[targetChatId]) return;
+    if (currentChatId !== targetChatId || !liveElementsReferences || !liveResponses[targetChatId]) return;
 
-        var record = liveResponses[targetChatId];
-        var hasReasoning = record.reasoningBuffer && record.reasoningBuffer.trim().length > 0;
+    var record = liveResponses[targetChatId];
+    var hasReasoning = record.reasoningBuffer && record.reasoningBuffer.trim().length > 0;
 
-        if (hasReasoning) {
-            if (!liveElementsReferences.thinkBoxNode) {
-                var box = createThinkBox();
-                liveElementsReferences.thinkBoxNode = box;
-                liveElementsReferences.thinkContainer.appendChild(box.element);
+    if (hasReasoning) {
+        if (!liveElementsReferences.thinkBoxNode) {
+            var box = createThinkBox();
+            liveElementsReferences.thinkBoxNode = box;
+            liveElementsReferences.thinkContainer.appendChild(box.element);
+        }
+        liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(record.reasoningBuffer);
+        var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+        if (dots) dots.style.display = 'none';
+    } else {
+        var thinkMatch = record.fullResponse.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+        if (thinkMatch && !liveElementsReferences.thinkBoxNode) {
+            var box = createThinkBox();
+            liveElementsReferences.thinkBoxNode = box;
+            liveElementsReferences.thinkContainer.appendChild(box.element);
+            liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
+            if (record.fullResponse.indexOf('</think>') !== -1) {
+                liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
+                var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+                if (dots) dots.style.display = 'none';
             }
-            liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(record.reasoningBuffer);
-            var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
-            if (dots) dots.style.display = 'none';
-        } else {
-            var thinkMatch = record.fullResponse.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
-            if (thinkMatch && !liveElementsReferences.thinkBoxNode) {
-                var box = createThinkBox();
-                liveElementsReferences.thinkBoxNode = box;
-                liveElementsReferences.thinkContainer.appendChild(box.element);
-                liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
-                if (record.fullResponse.indexOf('</think>') !== -1) {
-                    liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
-                    var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
-                    if (dots) dots.style.display = 'none';
-                }
-            } else if (thinkMatch && liveElementsReferences.thinkBoxNode) {
-                liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
-                if (record.fullResponse.indexOf('</think>') !== -1) {
-                    liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
-                    var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
-                    if (dots) dots.style.display = 'none';
-                }
+        } else if (thinkMatch && liveElementsReferences.thinkBoxNode) {
+            liveElementsReferences.thinkBoxNode.content.innerHTML = parseMd(thinkMatch[1]);
+            if (record.fullResponse.indexOf('</think>') !== -1) {
+                liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
+                var dots = liveElementsReferences.thinkBoxNode.element.querySelector('.think-dots');
+                if (dots) dots.style.display = 'none';
             }
         }
-
-        var normalContent = record.fullResponse;
-        if (!hasReasoning) {
-            normalContent = record.fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '');
-        }
-        liveElementsReferences.contentDiv.innerHTML = parseMd(normalContent);
-        enhanceCodeBlocks(liveElementsReferences.contentDiv);
-        if (autoScrollEnabled) scrollToBottom();
     }
+
+    var normalContent = record.fullResponse;
+    if (!hasReasoning) {
+        normalContent = record.fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    }
+    if (record.sandboxExecuted) {
+        normalContent = normalContent.replace(/```(?:js|javascript)\s*\n[\s\S]*?\n```/g, '');
+    }
+    normalContent = normalContent.trim();
+    liveElementsReferences.contentDiv.innerHTML = parseMd(normalContent);
+    enhanceCodeBlocks(liveElementsReferences.contentDiv);
+    if (autoScrollEnabled) scrollToBottom();
+}
 
     function updateSendButton() {
         var sendBtn = document.getElementById('send-btn');
@@ -2248,40 +2257,40 @@
     }
 
     function stopGeneration() {
-        var chatId = currentChatId;
-        agentStopRequested = true;
-        if (activeControllers[chatId]) {
-            activeControllers[chatId].abort();
-            if (liveResponses[chatId] && (liveResponses[chatId].fullResponse || liveResponses[chatId].reasoningBuffer)) {
-                var finalContent = liveResponses[chatId].fullResponse || '';
-                var reasoning = liveResponses[chatId].reasoningBuffer;
-                if (reasoning && reasoning.trim().length > 0) {
-                    finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
-                }
-                var agentRounds = getAgentRounds();
-                var snapshot = agentRounds.length > 0 ? agentRounds : undefined;
-                allChats[chatId].history.push({
-                    role: 'assistant',
-                    content: finalContent,
-                    timestamp: formatTime(),
-                    sandboxRounds: snapshot
-                });
-                allChats[chatId].agentRounds = [];
-                saveToStorage();
+    var chatId = currentChatId;
+    agentStopRequested = true;
+    agentRunning = false;
+    if (activeControllers[chatId]) {
+        activeControllers[chatId].abort();
+        if (liveResponses[chatId] && (liveResponses[chatId].fullResponse || liveResponses[chatId].reasoningBuffer)) {
+            var finalContent = liveResponses[chatId].fullResponse || '';
+            var reasoning = liveResponses[chatId].reasoningBuffer;
+            if (reasoning && reasoning.trim().length > 0) {
+                finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
             }
-            delete activeControllers[chatId];
-            delete liveResponses[chatId];
-            liveElementsReferences = null;
-            agentRunning = false;
-
-            var userInput = document.getElementById('user-input');
-            var sendBtn = document.getElementById('send-btn');
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            updateSendButton();
-            userInput.focus();
+            var rounds = liveResponses[chatId].sandboxRounds || [];
+            allChats[chatId].history.push({
+                role: 'assistant',
+                content: finalContent,
+                timestamp: formatTime(),
+                sandboxRounds: rounds.length > 0 ? rounds.slice() : undefined
+            });
+            allChats[chatId].agentRounds = [];
+            saveToStorage();
         }
+        delete activeControllers[chatId];
+        delete liveResponses[chatId];
+        liveElementsReferences = null;
+        agentRunning = false;
+
+        var userInput = document.getElementById('user-input');
+        var sendBtn = document.getElementById('send-btn');
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        updateSendButton();
+        userInput.focus();
     }
+}
 
     function extractCodeBlocks(content) {
         var blocks = [];
@@ -2443,299 +2452,302 @@
     }
 
     function sendMessage() {
-        var targetChatId = currentChatId;
-        var userInput = document.getElementById('user-input');
-        var sendBtn = document.getElementById('send-btn');
-        var messageText = userInput.value.trim();
+    var targetChatId = currentChatId;
+    var userInput = document.getElementById('user-input');
+    var sendBtn = document.getElementById('send-btn');
+    var messageText = userInput.value.trim();
 
-        if (!messageText && pendingFiles.length === 0) return;
+    if (!messageText && pendingFiles.length === 0) return;
 
-        agentStopRequested = false;
-        agentCurrentRound = 0;
+    agentStopRequested = false;
+    agentCurrentRound = 0;
+    agentRunning = true;
 
-        var displayText = messageText;
-        if (!messageText && pendingFiles.length > 0) displayText = 'Please analyze the attached file(s).';
+    var displayText = messageText;
+    if (!messageText && pendingFiles.length > 0) displayText = 'Please analyze the attached file(s).';
 
-        var messageContent = displayText;
-        var fileAttachments = [];
+    var messageContent = displayText;
+    var fileAttachments = [];
 
-        if (sandboxEnabled && displayText) {
-            var sandboxHint = '\n\n[SANDBOX MODE ACTIVE]\nYou are an autonomous AI agent. You have access to a virtual file system (fs) and console.\n- fs.readFile(path) - read a file from virtual FS\n- fs.writeFile(path, content) - create or overwrite a file\n- fs.exists(path) - check if path exists\n- fs.listDir(path) - list entries in a directory\n- fs.deleteFile(path) - remove a file\n- fs.mkdir(path) - create a directory\n- console.log/error/warn/info(...) - print to console\n\nWhen you write JavaScript code, wrap it in ```js ... ``` code blocks. Each code block will be automatically executed in the sandbox.\nThe console output and virtual file system state will be shown to you after execution.\nYou can run multiple rounds - write code, see results, write more code.\nWhen you are done with your task, respond with plain text (no code block) to stop the agent loop.\nWhen you create files, provide a download link by listing the file path.\nYou can create HTML/CSS/JS files, text files, JSON data files, etc. in the virtual FS.\nIMPORTANT: All code must be in English only. No Chinese characters, no emoji, no comments in Chinese.\n';
-            messageContent = displayText + sandboxHint;
-        }
+    if (sandboxEnabled && displayText) {
+        var sandboxHint = '\n\n[SANDBOX MODE ACTIVE]\nYou are an autonomous AI agent. You have access to a virtual file system (fs) and console.\n- fs.readFile(path) - read a file from virtual FS\n- fs.writeFile(path, content) - create or overwrite a file\n- fs.exists(path) - check if path exists\n- fs.listDir(path) - list entries in a directory\n- fs.deleteFile(path) - remove a file\n- fs.mkdir(path) - create a directory\n- console.log/error/warn/info(...) - print to console\n\nWhen you write JavaScript code, wrap it in ```js ... ``` code blocks. Each code block will be automatically executed in the sandbox.\nThe console output and virtual file system state will be shown to you after execution.\nYou can run multiple rounds - write code, see results, write more code.\nWhen you are done with your task, respond with plain text (no code block) to stop the agent loop.\nWhen you create files, provide a download link by listing the file path.\nYou can create HTML/CSS/JS files, text files, JSON data files, etc. in the virtual FS.\nIMPORTANT: All code must be in English only. No Chinese characters, no emoji, no comments in Chinese.\n';
+        messageContent = displayText + sandboxHint;
+    }
 
-        if (pendingFiles.length > 0) {
-            messageContent = [];
-            if (displayText) messageContent.push({ type: "text", text: displayText + (sandboxEnabled ? sandboxHint : '') });
-            pendingFiles.forEach(function(file) {
-                if (file.isImage) {
-                    messageContent.push({ type: "image_url", image_url: { url: file.data } });
-                    fileAttachments.push({ name: file.name, type: file.type, size: file.size, isImage: true, data: file.data });
-                } else {
-                    var fileText = file.data && file.data.length > 6000 ? file.data.substring(0, 6000) + '\n... (truncated)' : (file.data || '');
-                    messageContent.push({ type: "text", text: 'File: ' + file.name + ' (' + (file.type || 'unknown') + ')\n```\n' + fileText + '\n```' });
-                    fileAttachments.push({ name: file.name, type: file.type, size: file.size, isImage: false });
-                }
+    if (pendingFiles.length > 0) {
+        messageContent = [];
+        if (displayText) messageContent.push({ type: "text", text: displayText + (sandboxEnabled ? sandboxHint : '') });
+        pendingFiles.forEach(function(file) {
+            if (file.isImage) {
+                messageContent.push({ type: "image_url", image_url: { url: file.data } });
+                fileAttachments.push({ name: file.name, type: file.type, size: file.size, isImage: true, data: file.data });
+            } else {
+                var fileText = file.data || '';
+                messageContent.push({ type: "text", text: 'File: ' + file.name + ' (' + (file.type || 'unknown') + ')\n```\n' + fileText + '\n```' });
+                fileAttachments.push({ name: file.name, type: file.type, size: file.size, isImage: false });
+            }
+        });
+    }
+
+    if (allChats[targetChatId].history.length === 0) {
+        allChats[targetChatId].title = displayText.substring(0, 28) + (displayText.length > 28 ? '...' : '');
+        if (currentChatId === targetChatId) document.getElementById('current-chat-title').innerText = allChats[targetChatId].title;
+    }
+
+    var timestamp = formatTime();
+
+    if (currentChatId === targetChatId) renderUserMessage(displayText, timestamp, fileAttachments);
+
+    var apiHistory = allChats[targetChatId].history.map(function(msg) {
+        return { role: msg.role, content: msg.content };
+    });
+    apiHistory.push({ role: 'user', content: messageContent });
+
+    allChats[targetChatId].history.push({
+        role: 'user',
+        content: messageContent,
+        displayText: displayText,
+        files: fileAttachments,
+        timestamp: timestamp
+    });
+    allChats[targetChatId].agentRounds = [];
+    saveToStorage();
+    renderHistory();
+
+    pendingFiles = [];
+    renderFilePreviews();
+
+    userInput.value = '';
+    userInput.style.height = 'auto';
+    userInput.disabled = true;
+    sendBtn.disabled = true;
+    updateSendButton();
+
+    if (currentChatId === targetChatId) liveElementsReferences = createLiveAIMessageElement();
+
+    liveResponses[targetChatId] = { fullResponse: '', reasoningBuffer: '', isThinking: true, sandboxExecuted: false, sandboxRounds: [], autoAbort: false };
+    var controller = new AbortController();
+    activeControllers[targetChatId] = controller;
+
+    doApiCall(targetChatId, apiHistory, controller);
+}
+
+    function updateLiveSandboxUI(targetChatId) {
+    if (currentChatId !== targetChatId || !liveElementsReferences) return;
+    var record = liveResponses[targetChatId];
+    if (!record || !record.sandboxRounds || record.sandboxRounds.length === 0) return;
+    var sbContainer = liveElementsReferences.sandboxContainer;
+    sbContainer.innerHTML = '';
+    var panel = createSandboxPanel(record.sandboxRounds);
+    sbContainer.appendChild(panel);
+}
+
+function finalizeResponse(targetChatId) {
+    var record = liveResponses[targetChatId];
+    if (!record) return;
+
+    var finalContent = record.fullResponse || '';
+    var reasoning = record.reasoningBuffer;
+    if (reasoning && reasoning.trim().length > 0) {
+        finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
+    }
+
+    var rounds = record.sandboxRounds || [];
+
+    if (sandboxEnabled && record.sandboxExecuted && !agentStopRequested && agentCurrentRound < agentMaxRounds) {
+        allChats[targetChatId].history.push({
+            role: 'assistant',
+            content: finalContent,
+            timestamp: formatTime(),
+            sandboxRounds: rounds.slice()
+        });
+
+        var consoleSummary = '';
+        rounds.forEach(function(r, idx) {
+            consoleSummary += 'Round ' + (idx + 1) + ' result:\n';
+            if (r.logs && r.logs.length > 0) {
+                consoleSummary += r.logs.join('\n') + '\n';
+            } else {
+                consoleSummary += '(no console output)\n';
+            }
+            if (r.error) {
+                consoleSummary += 'Execution error: ' + r.error + '\n';
+            }
+            consoleSummary += '\n';
+        });
+
+        var fsFiles = getSandboxFS();
+        var fsList = Object.keys(fsFiles).filter(function(k) { return fsFiles[k].type === 'file'; });
+        if (fsList.length > 0) {
+            consoleSummary += 'Current virtual files:\n';
+            fsList.forEach(function(f) {
+                consoleSummary += '  ' + f + ' (' + formatFileSize(fsFiles[f].size || 0) + ')\n';
             });
         }
 
-        if (allChats[targetChatId].history.length === 0) {
-            allChats[targetChatId].title = displayText.substring(0, 28) + (displayText.length > 28 ? '...' : '');
-            if (currentChatId === targetChatId) document.getElementById('current-chat-title').innerText = allChats[targetChatId].title;
-        }
-
-        var timestamp = formatTime();
-
-        if (currentChatId === targetChatId) renderUserMessage(displayText, timestamp, fileAttachments);
-
-        var apiHistory = allChats[targetChatId].history.map(function(msg) {
-            return { role: msg.role, content: msg.content };
-        });
-        apiHistory.push({ role: 'user', content: messageContent });
+        var continueMessage = 'Execution results from the sandbox:\n\n```\n' + consoleSummary + '```\n\nContinue working on the task. If done, respond with plain text. Otherwise write the next JS code block.';
 
         allChats[targetChatId].history.push({
             role: 'user',
-            content: messageContent,
-            displayText: displayText,
-            files: fileAttachments,
-            timestamp: timestamp
+            content: continueMessage,
+            displayText: '',
+            files: [],
+            timestamp: formatTime()
+        });
+        saveToStorage();
+
+        if (currentChatId === targetChatId) {
+            liveElementsReferences = null;
+            delete liveResponses[targetChatId];
+
+            var newApiHistory = allChats[targetChatId].history.map(function(msg) {
+                return { role: msg.role, content: msg.content };
+            });
+
+            liveResponses[targetChatId] = {
+                fullResponse: '',
+                reasoningBuffer: '',
+                isThinking: true,
+                sandboxExecuted: false,
+                sandboxRounds: [],
+                autoAbort: false
+            };
+            liveElementsReferences = createLiveAIMessageElement();
+            var newController = new AbortController();
+            activeControllers[targetChatId] = newController;
+            doApiCall(targetChatId, newApiHistory, newController);
+        }
+    } else {
+        if (rounds.length > 0 && agentCurrentRound >= agentMaxRounds) {
+            finalContent += '\n\n[Agent: Max rounds reached (' + agentMaxRounds + ')]';
+        }
+        allChats[targetChatId].history.push({
+            role: 'assistant',
+            content: finalContent,
+            timestamp: formatTime(),
+            sandboxRounds: rounds.length > 0 ? rounds.slice() : undefined
         });
         allChats[targetChatId].agentRounds = [];
         saveToStorage();
-        renderHistory();
-
-        pendingFiles = [];
-        renderFilePreviews();
-
-        userInput.value = '';
-        userInput.style.height = 'auto';
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-        updateSendButton();
-
-        if (currentChatId === targetChatId) liveElementsReferences = createLiveAIMessageElement();
-
-        liveResponses[targetChatId] = { fullResponse: '', reasoningBuffer: '', isThinking: true };
-        var controller = new AbortController();
-        activeControllers[targetChatId] = controller;
-
-        doApiCall(targetChatId, apiHistory, controller);
-    }
-
-    function doApiCall(targetChatId, apiHistory, controller) {
-        var userInput = document.getElementById('user-input');
-        var sendBtn = document.getElementById('send-btn');
-
-        var baseApi = appSettings.apiUrl.replace(/\/$/, '');
-        var apiUrl = baseApi + '/chat/completions';
-        var headers = { 'Content-Type': 'application/json' };
-        if (appSettings.apiKey) headers['Authorization'] = 'Bearer ' + appSettings.apiKey;
-
-        var requestBody = {
-            model: appSettings.model,
-            messages: apiHistory,
-            stream: true
-        };
-        if (thinkingEnabled) {
-            requestBody.thinking = { type: "enabled" };
-            requestBody.reasoning_effort = "high";
-        } else {
-            requestBody.thinking = { type: "disabled" };
+        if (currentChatId === targetChatId) {
+            liveElementsReferences = null;
         }
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(requestBody),
-            signal: controller.signal
-        }).then(function(response) {
-            if (!response.ok) throw new Error('HTTP error: ' + response.status);
-            var reader = response.body.getReader();
-            var decoder = new TextDecoder();
-            function pump() {
-                return reader.read().then(function(result) {
-                    var value = result.value, done = result.done;
-                    if (done) return;
-                    var chunk = decoder.decode(value, { stream: true });
-                    var lines = chunk.split('\n');
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i];
-                        if (line.indexOf('data: ') === 0 && line !== 'data: [DONE]') {
-                            try {
-                                var data = JSON.parse(line.slice(6));
-                                var delta = data.choices && data.choices[0] && data.choices[0].delta;
-                                if (delta) {
-                                    if (delta.reasoning_content) {
-                                        if (!liveResponses[targetChatId].reasoningBuffer) liveResponses[targetChatId].reasoningBuffer = '';
-                                        liveResponses[targetChatId].reasoningBuffer += delta.reasoning_content;
-                                        updateLiveUI(targetChatId);
-                                    }
-                                    if (delta.content) {
-                                        liveResponses[targetChatId].fullResponse += delta.content;
-                                        updateLiveUI(targetChatId);
-                                    }
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                    return pump();
-                });
-            }
-            return pump();
-        }).then(function() {
-            if (liveResponses[targetChatId] && (liveResponses[targetChatId].fullResponse || liveResponses[targetChatId].reasoningBuffer)) {
-                var finalContent = liveResponses[targetChatId].fullResponse || '';
-                var reasoning = liveResponses[targetChatId].reasoningBuffer;
-                if (reasoning && reasoning.trim().length > 0) {
-                    finalContent = '<think>' + reasoning + '</think>\n\n' + finalContent;
-                }
-
-                if (sandboxEnabled && !agentStopRequested && currentChatId === targetChatId) {
-                    var codeBlocks = extractCodeBlocks(finalContent);
-                    if (codeBlocks.length > 0 && agentCurrentRound < agentMaxRounds) {
-                        var newRounds = [];
-                        for (var ci = 0; ci < codeBlocks.length; ci++) {
-                            agentCurrentRound++;
-                            var execResult = executeSandboxCode(codeBlocks[ci], targetChatId);
-                            newRounds.push({
-                                code: codeBlocks[ci],
-                                logs: execResult.logs,
-                                error: execResult.error,
-                                fsSnapshot: execResult.fsSnapshot
-                            });
-                        }
-
-                        var currentRounds = allChats[targetChatId].agentRounds || [];
-                        currentRounds = currentRounds.concat(newRounds);
-                        allChats[targetChatId].agentRounds = currentRounds;
-
-                        allChats[targetChatId].history.push({
-                            role: 'assistant',
-                            content: finalContent,
-                            timestamp: formatTime(),
-                            sandboxRounds: currentRounds.slice()
-                        });
-                        saveToStorage();
-
-                        if (currentChatId === targetChatId) {
-                            var chatBox = document.getElementById('chat-box');
-                            var existingWrapper = liveElementsReferences ? liveElementsReferences.wrapper : null;
-                            if (existingWrapper) {
-                                var sbContainer = liveElementsReferences.sandboxContainer;
-                                sbContainer.innerHTML = '';
-                                var panel = createSandboxPanel(currentRounds);
-                                sbContainer.appendChild(panel);
-                                if (agentCurrentRound >= agentMaxRounds) {
-                                    sbContainer.innerHTML += '<p style="color:var(--danger);font-size:0.78em;margin-top:6px;">Max agent rounds (' + agentMaxRounds + ') reached.</p>';
-                                }
-                                liveElementsReferences = null;
-                            }
-                        }
-
-                        delete liveResponses[targetChatId];
-
-                        var consoleSummary = '';
-                        newRounds.forEach(function(r, idx) {
-                            consoleSummary += 'Round ' + (agentCurrentRound - newRounds.length + idx + 1) + ' result:\n';
-                            if (r.logs && r.logs.length > 0) {
-                                consoleSummary += r.logs.join('\n') + '\n';
-                            } else {
-                                consoleSummary += '(no console output)\n';
-                            }
-                            if (r.error) {
-                                consoleSummary += 'Execution error: ' + r.error + '\n';
-                            }
-                            consoleSummary += '\n';
-                        });
-
-                        var fsFiles = getSandboxFS();
-                        var fsList = Object.keys(fsFiles).filter(function(k) { return fsFiles[k].type === 'file'; });
-                        if (fsList.length > 0) {
-                            consoleSummary += 'Current virtual files:\n';
-                            fsList.forEach(function(f) {
-                                consoleSummary += '  ' + f + ' (' + formatFileSize(fsFiles[f].size || 0) + ')\n';
-                            });
-                        }
-
-                        var continueMessage = 'Execution results from the sandbox:\n\n```\n' + consoleSummary + '```\n\nContinue working on the task. If done, respond with plain text. Otherwise write the next JS code block.';
-
-                        var newApiHistory = apiHistory.slice();
-                        newApiHistory.push({ role: 'assistant', content: finalContent });
-                        newApiHistory.push({ role: 'user', content: continueMessage });
-
-                        allChats[targetChatId].history.push({
-                            role: 'user',
-                            content: continueMessage,
-                            displayText: '[Agent auto-continue - Round ' + agentCurrentRound + ']',
-                            files: [],
-                            timestamp: formatTime()
-                        });
-                        saveToStorage();
-
-                        if (currentChatId === targetChatId) {
-                            renderUserMessage('[Agent auto-continue - Round ' + agentCurrentRound + ']', formatTime(), []);
-                            liveElementsReferences = createLiveAIMessageElement();
-                            liveResponses[targetChatId] = { fullResponse: '', reasoningBuffer: '', isThinking: true };
-                            var newController = new AbortController();
-                            activeControllers[targetChatId] = newController;
-                            updateSendButton();
-                            doApiCall(targetChatId, newApiHistory, newController);
-                            return;
-                        }
-                    } else {
-                        if (codeBlocks.length > 0 && agentCurrentRound >= agentMaxRounds) {
-                            finalContent += '\n\n[Agent: Max rounds reached (' + agentMaxRounds + ')]';
-                        }
-                        var allRounds = allChats[targetChatId].agentRounds || [];
-                        allChats[targetChatId].history.push({
-                            role: 'assistant',
-                            content: finalContent,
-                            timestamp: formatTime(),
-                            sandboxRounds: allRounds.length > 0 ? allRounds.slice() : undefined
-                        });
-                        allChats[targetChatId].agentRounds = [];
-                        saveToStorage();
-                    }
-                } else {
-                    var allRounds = allChats[targetChatId].agentRounds || [];
-                    allChats[targetChatId].history.push({
-                        role: 'assistant',
-                        content: finalContent,
-                        timestamp: formatTime(),
-                        sandboxRounds: allRounds.length > 0 ? allRounds.slice() : undefined
-                    });
-                    allChats[targetChatId].agentRounds = [];
-                    saveToStorage();
-                }
-            }
-        }).catch(function(error) {
-            if (error.name !== 'AbortError') {
-                if (currentChatId === targetChatId && liveElementsReferences) {
-                    liveElementsReferences.contentDiv.innerHTML += '<p style="color:var(--danger);margin-top:10px;">Error: ' + escHtml(error.message) + '</p>';
-                }
-            }
-        }).finally(function() {
-            if (!(sandboxEnabled && !agentStopRequested && currentChatId === targetChatId && liveResponses[targetChatId])) {
-                delete activeControllers[targetChatId];
-                delete liveResponses[targetChatId];
-
-                if (currentChatId === targetChatId) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    updateSendButton();
-                    userInput.focus();
-                    if (liveElementsReferences && liveElementsReferences.thinkBoxNode && liveElementsReferences.thinkBoxNode.element.classList.contains('expanded')) {
-                        setTimeout(function() {
-                            if (liveElementsReferences && liveElementsReferences.thinkBoxNode) liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
-                        }, 800);
-                    }
-                    if (!sandboxEnabled || agentStopRequested) {
-                        liveElementsReferences = null;
-                    }
-                }
-                agentRunning = false;
-            }
-        });
+        agentRunning = false;
     }
+}
+
+function doApiCall(targetChatId, apiHistory, controller) {
+    var userInput = document.getElementById('user-input');
+    var sendBtn = document.getElementById('send-btn');
+
+    var baseApi = appSettings.apiUrl.replace(/\/$/, '');
+    var apiUrl = baseApi + '/chat/completions';
+    var headers = { 'Content-Type': 'application/json' };
+    if (appSettings.apiKey) headers['Authorization'] = 'Bearer ' + appSettings.apiKey;
+
+    var requestBody = {
+        model: appSettings.model,
+        messages: apiHistory,
+        stream: true
+    };
+    if (thinkingEnabled) {
+        requestBody.thinking = { type: "enabled" };
+        requestBody.reasoning_effort = "high";
+    } else {
+        requestBody.thinking = { type: "disabled" };
+    }
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+    }).then(function(response) {
+        if (!response.ok) throw new Error('HTTP error: ' + response.status);
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        function pump() {
+            return reader.read().then(function(result) {
+                var value = result.value, done = result.done;
+                if (done) return;
+                var chunk = decoder.decode(value, { stream: true });
+                var lines = chunk.split('\n');
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    if (line.indexOf('data: ') === 0 && line !== 'data: [DONE]') {
+                        try {
+                            var data = JSON.parse(line.slice(6));
+                            var delta = data.choices && data.choices[0] && data.choices[0].delta;
+                            if (delta) {
+                                if (delta.reasoning_content) {
+                                    if (!liveResponses[targetChatId].reasoningBuffer) liveResponses[targetChatId].reasoningBuffer = '';
+                                    liveResponses[targetChatId].reasoningBuffer += delta.reasoning_content;
+                                    updateLiveUI(targetChatId);
+                                }
+                                if (delta.content) {
+                                    liveResponses[targetChatId].fullResponse += delta.content;
+                                    updateLiveUI(targetChatId);
+                                }
+                            }
+                        } catch (e) {}
+                    }
+                }
+                var record = liveResponses[targetChatId];
+                if (record && sandboxEnabled && !record.sandboxExecuted && !agentStopRequested) {
+                    var codeMatch = record.fullResponse.match(/```(?:js|javascript)\s*\n([\s\S]*?)\n```/);
+                    if (codeMatch && codeMatch[1].trim().length > 0) {
+                        record.sandboxExecuted = true;
+                        var code = codeMatch[1].trim();
+                        agentCurrentRound++;
+                        var roundData = { code: code, logs: [], error: null, fsSnapshot: {} };
+                        record.sandboxRounds.push(roundData);
+                        updateLiveSandboxUI(targetChatId);
+                        var execResult = executeSandboxCode(code, targetChatId);
+                        roundData.logs = execResult.logs;
+                        roundData.error = execResult.error;
+                        roundData.fsSnapshot = execResult.fsSnapshot;
+                        updateLiveSandboxUI(targetChatId);
+                        record.autoAbort = true;
+                        controller.abort();
+                        return;
+                    }
+                }
+                return pump();
+            });
+        }
+        return pump();
+    }).then(function() {
+        finalizeResponse(targetChatId);
+    }).catch(function(error) {
+        var record = liveResponses[targetChatId];
+        if (error.name === 'AbortError' && record && record.autoAbort) {
+            finalizeResponse(targetChatId);
+        } else if (error.name !== 'AbortError') {
+            if (currentChatId === targetChatId && liveElementsReferences) {
+                liveElementsReferences.contentDiv.innerHTML += '<p style="color:var(--danger);margin-top:10px;">Error: ' + escHtml(error.message) + '</p>';
+            }
+            agentRunning = false;
+        } else {
+            agentRunning = false;
+        }
+    }).finally(function() {
+        if (!liveResponses[targetChatId]) {
+            delete activeControllers[targetChatId];
+            if (currentChatId === targetChatId) {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                updateSendButton();
+                userInput.focus();
+                if (liveElementsReferences && liveElementsReferences.thinkBoxNode && liveElementsReferences.thinkBoxNode.element.classList.contains('expanded')) {
+                    setTimeout(function() {
+                        if (liveElementsReferences && liveElementsReferences.thinkBoxNode) liveElementsReferences.thinkBoxNode.element.classList.remove('expanded');
+                    }, 800);
+                }
+                liveElementsReferences = null;
+            }
+            agentRunning = false;
+        }
+    });
+}
 
     function quickAsk(prompt) {
         document.getElementById('user-input').value = prompt;
